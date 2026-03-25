@@ -1,16 +1,32 @@
-from src.config import FEATURE_NAMES
 import numpy as np
 import joblib
 import sys
 import os
 
+# add the project root to the path so we can import from src/
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..'))
+
+# feature names defined here directly to avoid import order issues
+FEATURE_NAMES = {
+    'diabetes': [
+        'Pregnancies', 'Glucose', 'BloodPressure',
+        'SkinThickness', 'Insulin', 'BMI',
+        'DiabetesPedigreeFunction', 'Age'
+    ],
+    'heart': [
+        'age', 'sex', 'cp', 'trestbps', 'chol',
+        'fbs', 'restecg', 'thalach', 'exang',
+        'oldpeak', 'slope', 'ca', 'thal'
+    ]
+}
 
 
 def predict(dataset, input_values):
+    # load the scaler and best model for this dataset
     scaler = joblib.load(f'models/{dataset}_scaler.pkl')
     model = joblib.load(f'models/{dataset}_random_forest.pkl')
 
+    # normalize the input the same way we normalized training data
     input_array = np.array(input_values).reshape(1, -1)
     input_scaled = scaler.transform(input_array)
 
@@ -30,6 +46,7 @@ def interactive_predict(dataset):
     print(f"\nEnter patient data for {dataset.capitalize()} prediction:")
     print("-" * 40)
 
+    # collect each feature value one at a time from the user
     values = []
     for feature in features:
         val = float(input(f"  {feature}: "))

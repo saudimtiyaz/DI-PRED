@@ -12,7 +12,7 @@ def preprocess(dataset):
     dataset: 'diabetes' or 'heart'
     """
 
-    # ── 1. Load ──────────────────────────────────────────────
+    # load the right csv depending on which dataset we're working with
     if dataset == 'diabetes':
         df = pd.read_csv('data/raw/diabetes.csv')
         target_col = 'Outcome'
@@ -24,8 +24,8 @@ def preprocess(dataset):
 
     print(f"\n[{dataset}] Loaded: {df.shape[0]} rows, {df.shape[1]} columns")
 
-    # ── 2. Handle missing/zero values ────────────────────────
-    # Diabetes dataset uses 0 as a placeholder for missing values
+    # the diabetes dataset uses 0 as a stand-in for missing values
+    # so we replace those zeros with the median of each column
     if dataset == 'diabetes':
         zero_cols = ['Glucose', 'BloodPressure',
                      'SkinThickness', 'Insulin', 'BMI']
@@ -33,11 +33,12 @@ def preprocess(dataset):
         df.fillna(df.median(), inplace=True)
         print(f"[{dataset}] Zero values replaced with median")
 
-    # ── 3. Split features and target ─────────────────────────
+    # separate the features from what we're trying to predict
     X = df.drop(columns=[target_col])
     y = df[target_col]
 
-    # ── 4. Train / val / test split (70 / 15 / 15) ───────────
+    # split into train / val / test (70% / 15% / 15%)
+    # stratify makes sure both splits have a similar ratio of positives to negatives
     X_train, X_temp, y_train, y_temp = train_test_split(
         X, y, test_size=0.30, random_state=42, stratify=y
     )
@@ -47,13 +48,14 @@ def preprocess(dataset):
 
     print(f"[{dataset}] Train: {X_train.shape[0]}, Val: {X_val.shape[0]}, Test: {X_test.shape[0]}")
 
-    # ── 5. Normalize with StandardScaler ─────────────────────
+    # normalize so all features are on the same scale
+    # we fit only on training data so the test set doesn't leak into the scaler
     scaler = StandardScaler()
     X_train = scaler.fit_transform(X_train)
     X_val = scaler.transform(X_val)
     X_test = scaler.transform(X_test)
 
-    # ── 6. Save processed data ───────────────────────────────
+    # save everything so train.py can load it without rerunning this file
     os.makedirs('data/processed', exist_ok=True)
     os.makedirs('models', exist_ok=True)
 
@@ -64,7 +66,7 @@ def preprocess(dataset):
     np.save(f'data/processed/{dataset}_y_val.npy',   y_val)
     np.save(f'data/processed/{dataset}_y_test.npy',  y_test)
 
-    # Save scaler for use during prediction
+    # save the scaler too so predict.py can use the same normalization later
     joblib.dump(scaler, f'models/{dataset}_scaler.pkl')
 
     print(f"[{dataset}] Saved processed files to data/processed/")
