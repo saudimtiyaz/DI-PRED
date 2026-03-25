@@ -1,0 +1,5 @@
+Dataset,Model,Accuracy,Precision,Recall,F1,AUC
+diabetes,Logistic Regression,0.7759,0.7778,0.5122,0.6176,0.8621
+diabetes,Random Forest,0.75,0.7143,0.4878,0.5797,0.827
+heart,Logistic Regression,0.7987,0.7553,0.8987,0.8208,0.9072
+heart,Random Forest,0.9805,1.0,0.962,0.9806,0.999
