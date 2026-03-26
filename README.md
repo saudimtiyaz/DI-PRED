@@ -89,6 +89,8 @@ Output will be saved in ...
 
 ## 4. Guidance
 
+Documentation note: this repository includes a local workflow check for preprocessing, training, evaluation, and CLI prediction.
+
 - Use [git](https://git-scm.com/book/en/v2)
   - Do NOT use history re-editing (rebase)
   - Commit messages should be informative:
