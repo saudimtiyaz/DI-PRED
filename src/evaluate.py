@@ -1,13 +1,16 @@
 import numpy as np
 import pandas as pd
-import matplotlib.pyplot as plt
-import seaborn as sns
+import os
+import joblib
 from sklearn.metrics import (
     accuracy_score, precision_score, recall_score,
-    f1_score, roc_auc_score, confusion_matrix, roc_curve
+    f1_score, roc_auc_score
 )
-import joblib
-import os
+from src.visualize import (
+    plot_confusion_matrix,
+    plot_roc_curves,
+    plot_feature_importance
+)
 
 
 def load_test_data(dataset):
@@ -37,67 +40,6 @@ def get_metrics(model, X_test, y_test):
     }, y_pred, y_proba
 
 
-def plot_confusion_matrix(y_test, y_pred, dataset, model_name):
-    cm = confusion_matrix(y_test, y_pred)
-    plt.figure(figsize=(5, 4))
-    sns.heatmap(cm, annot=True, fmt='d', cmap='Blues',
-                xticklabels=['No', 'Yes'],
-                yticklabels=['No', 'Yes'])
-    plt.title(
-        f'{dataset.capitalize()} — {model_name.replace("_", " ").title()}\nConfusion Matrix')
-    plt.ylabel('Actual')
-    plt.xlabel('Predicted')
-    plt.tight_layout()
-    path = f'results/figures/{dataset}_{model_name}_confusion_matrix.png'
-    plt.savefig(path)
-    plt.close()
-    print(f"  Saved: {path}")
-
-
-def plot_roc_curves(dataset, models_data):
-    # plot all models on the same chart so they're easy to compare
-    plt.figure(figsize=(7, 5))
-
-    for model_name, y_test, y_proba in models_data:
-        fpr, tpr, _ = roc_curve(y_test, y_proba)
-        auc = roc_auc_score(y_test, y_proba)
-        plt.plot(
-            fpr, tpr, label=f'{model_name.replace("_", " ").title()} (AUC={auc:.3f})')
-
-    # diagonal line represents a random guess — anything above this is useful
-    plt.plot([0, 1], [0, 1], 'k--', label='Random Guess')
-    plt.xlabel('False Positive Rate')
-    plt.ylabel('True Positive Rate')
-    plt.title(f'{dataset.capitalize()} — ROC Curves')
-    plt.legend()
-    plt.tight_layout()
-    path = f'results/figures/{dataset}_roc_curves.png'
-    plt.savefig(path)
-    plt.close()
-    print(f"  Saved: {path}")
-
-
-def plot_feature_importance(dataset, feature_names):
-    # random forest gives us importance scores for free after training
-    rf = load_model(dataset, 'random_forest')
-    importances = rf.feature_importances_
-    indices = np.argsort(importances)[::-1]  # sort highest to lowest
-
-    plt.figure(figsize=(8, 5))
-    plt.bar(range(len(importances)),
-            importances[indices],
-            color='steelblue', edgecolor='black')
-    plt.xticks(range(len(importances)),
-               [feature_names[i] for i in indices],
-               rotation=45, ha='right')
-    plt.title(f'{dataset.capitalize()} — Random Forest Feature Importance')
-    plt.tight_layout()
-    path = f'results/figures/{dataset}_feature_importance.png'
-    plt.savefig(path)
-    plt.close()
-    print(f"  Saved: {path}")
-
-
 def evaluate_dataset(dataset, feature_names):
     print(f"\n{'='*40}")
     print(f" Evaluating: {dataset.upper()}")
@@ -118,7 +60,9 @@ def evaluate_dataset(dataset, feature_names):
         for k, v in metrics.items():
             print(f"    {k}: {v}")
 
-        plot_confusion_matrix(y_test, y_pred, dataset, model_name)
+        # Plot confusion matrix using refactored tool
+        cm_path = f'results/figures/{dataset}_{model_name}_confusion_matrix.png'
+        plot_confusion_matrix(y_test, y_pred, dataset, model_name, cm_path)
 
         # collect roc data so we can plot all curves together
         roc_data.append((model_name, y_test, y_proba))
@@ -129,28 +73,24 @@ def evaluate_dataset(dataset, feature_names):
             **metrics
         })
 
-    plot_roc_curves(dataset, roc_data)
-    plot_feature_importance(dataset, feature_names)
+    # Plot ROC curves using refactored tool
+    roc_path = f'results/figures/{dataset}_roc_curves.png'
+    plot_roc_curves(dataset, roc_data, roc_path)
+
+    # Plot feature importance using refactored tool
+    rf = load_model(dataset, 'random_forest')
+    fi_path = f'results/figures/{dataset}_feature_importance.png'
+    plot_feature_importance(dataset, feature_names, rf.feature_importances_, fi_path)
 
     return all_metrics
 
 
 if __name__ == '__main__':
-    diabetes_features = [
-        'Pregnancies', 'Glucose', 'BloodPressure',
-        'SkinThickness', 'Insulin', 'BMI',
-        'DiabetesPedigreeFunction', 'Age'
-    ]
-
-    heart_features = [
-        'age', 'sex', 'cp', 'trestbps', 'chol',
-        'fbs', 'restecg', 'thalach', 'exang',
-        'oldpeak', 'slope', 'ca', 'thal'
-    ]
+    from src.config import FEATURE_NAMES
 
     all_metrics = []
-    all_metrics += evaluate_dataset('diabetes', diabetes_features)
-    all_metrics += evaluate_dataset('heart', heart_features)
+    for dataset in ['diabetes', 'heart']:
+        all_metrics += evaluate_dataset(dataset, FEATURE_NAMES[dataset])
 
     # save everything to a csv so it's easy to reference in the report
     os.makedirs('results', exist_ok=True)

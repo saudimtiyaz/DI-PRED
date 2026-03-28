@@ -55,6 +55,7 @@ def evaluate_val(model, X_val, y_val, model_name, dataset):
     # quick sanity check on val set right after training
     val_acc = model.score(X_val, y_val)
     print(f"[{dataset}] {model_name} Validation Accuracy: {val_acc:.4f}")
+    return val_acc
 
 
 def train_all(dataset):
@@ -69,10 +70,22 @@ def train_all(dataset):
     rf_model = train_random_forest(X_train, y_train, dataset)
 
     # print val accuracy for both so we can spot any obvious issues
-    evaluate_val(lr_model, X_val, y_val, 'Logistic Regression', dataset)
-    evaluate_val(rf_model, X_val, y_val, 'Random Forest', dataset)
+    lr_acc = evaluate_val(lr_model, X_val, y_val, 'Logistic Regression', dataset)
+    rf_acc = evaluate_val(rf_model, X_val, y_val, 'Random Forest', dataset)
+
+    # SAVE BEST MODEL LOGIC (Explicitly used by predict.py)
+    # This keeps it simple: if LR is better, save as 'best', else RF
+    best_model = lr_model if lr_acc >= rf_acc else rf_model
+    best_name = 'logistic_regression' if lr_acc >= rf_acc else 'random_forest'
+    
+    joblib.dump(best_model, f'models/{dataset}_best_model.pkl')
+    print(f"[{dataset}] Best model ({best_name}) saved to models/{dataset}_best_model.pkl")
 
 
 if __name__ == '__main__':
-    train_all('diabetes')
-    train_all('heart')
+    # Ensure processed data exists
+    if not os.path.exists('data/processed/diabetes_X_train.npy'):
+        print("[!] Warning: Processed data not found. Run preprocess.py first.")
+    else:
+        train_all('diabetes')
+        train_all('heart')
