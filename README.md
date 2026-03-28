@@ -1,9 +1,7 @@
 # DI-PRED: Advanced Disease Prediction System
-
 **DI-PRED** (Diagnostic Predictor) is a high-performance machine learning framework for early-stage risk detection of Diabetes and Heart Disease from patient clinical data.
 
 ## Important Links
-
 | [Timesheet](https://1sfu-my.sharepoint.com/:x:/g/personal/hamarneh_sfu_ca/IQDgUIFRK-A9QIVzN8vSNjCfAcLem4gWM2vQJVOOsGWfFOg) | [Slack channel](https://cmpt340spring2026.slack.com/archives/C0A9M1WBFPW) | [Project report](https://www.overleaf.com/project/696dc0102d552e14795dafb5) |
 | -------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------- | --------------------------------------------------------------------------- |
 
@@ -12,58 +10,67 @@
 - Project report: Link your Overleaf project report document.
 
 ## Video/demo/GIF
-
 Record a short video (1:40 - 2 minutes maximum) or gif or a simple screen recording or even using PowerPoint with audio or with text, showcasing your work.
 
 ## Table of Contents
-
 1. [Demo](#demo)
 2. [Installation](#installation)
 3. [Reproducing this project](#repro)
 4. [Guidance](#guide)
 
 <a name="demo"></a>
-
 ## 1. Example Demo
 
-Run the fully automated demo — data acquisition, model training, and diagnostic evaluation in one command:
+Launch the interactive diagnostic CLI to get a real-time risk assessment for a patient profile:
 
 ```bash
-chmod +x demo_walkthrough.sh
-./demo_walkthrough.sh
-```
-
-Or launch the interactive diagnostic CLI to test a patient profile manually:
-
-```python
-# From the project root
 python src/predict.py
 ```
 
-The CLI accepts patient clinical inputs in real time, validates them, and returns a probabilistic risk assessment for Diabetes and/or Heart Disease.
+The CLI will prompt you to enter patient clinical values (e.g. glucose, blood pressure, cholesterol), validate your inputs, and return a probabilistic risk score for Diabetes and Heart Disease.
 
 ### What to find where
 
 ```bash
 repository
 ├── data/
-│   ├── raw/             ## Original medical CSVs (Pima, UCI Heart Disease)
-│   ├── processed/       ## Scaled .npy train/test splits
-│   └── download_data.py ## Data acquisition & cleaning script
-├── models/              ## Serialized .pkl models & scalers
-├── notebooks/           ## EDA & result analysis notebooks
+│   ├── raw/                  ## Original medical CSVs (diabetes.csv, heart.csv)
+│   ├── processed/            ## Scaled .npy train/test splits
+│   ├── samples/              ## Sample input files for testing
+│   └── download_data.py      ## Data acquisition & cleaning script
+├── models/                   ## Serialized .pkl models & scalers
+│   ├── diabetes_best_...pkl
+│   ├── diabetes_logistic...pkl
+│   ├── diabetes_random...pkl
+│   ├── diabetes_scaler...pkl
+│   ├── heart_best_mo...pkl
+│   ├── heart_logistic_r...pkl
+│   ├── heart_random_...pkl
+│   └── heart_scaler.pkl
+├── notebooks/
+│   ├── EDA.ipynb             ## Exploratory data analysis
+│   └── results.ipynb         ## Result analysis
 ├── results/
-│   └── figures/         ## ROC curves, confusion matrices, feature importance PNGs
-│   └── metrics.csv      ## Model performance leaderboard
-├── src/                 ## Core modular source code
-│   └── predict.py       ## Interactive diagnostic CLI
-├── demo_walkthrough.sh  ## One-command automated demo
-├── requirements.txt     ## Python dependencies
-└── README.md            ## You are here
+│   ├── figures/              ## ROC curves, confusion matrices, feature importance PNGs
+│   └── metrics.csv           ## Model performance leaderboard
+├── src/                      ## Core modular source code
+│   ├── config.py             ## Project configuration & constants
+│   ├── evaluate.py           ## Model evaluation & figure generation
+│   ├── predict.py            ## Interactive diagnostic CLI
+│   ├── preprocess.py         ## Data cleaning & feature scaling
+│   ├── train.py              ## Model training pipeline
+│   ├── utils.py              ## Shared utility functions
+│   └── visualize.py          ## Plotting helpers
+├── main.py                   ## Entry point
+├── demo_walkthrough.sh       ## Automated demo script
+├── requirements.txt          ## Pip dependencies
+├── requirements.yml          ## Conda dependencies
+├── CONTRIBUTORS.md           ## Team details
+├── LICENSE
+└── README.md                 ## You are here
 ```
 
 <a name="installation"></a>
-
 ## 2. Installation
 
 Tested on Python 3.9+. Clone the repository and install dependencies:
@@ -77,7 +84,6 @@ pip install -r requirements.txt
 > **Note:** This tool is intended for research and educational purposes only. Always consult a medical professional for actual diagnosis.
 
 <a name="repro"></a>
-
 ## 3. Reproduction
 
 To reproduce the results reported in our paper, run the following steps:
@@ -96,20 +102,18 @@ cat results/metrics.csv
 Data is fetched automatically from the UCI Heart Disease repository and the Pima Indians Diabetes dataset. No manual download is required.
 
 Output will be saved in:
-
 - `results/metrics.csv` — accuracy and AUC scores for all models
 - `results/figures/` — ROC curves, confusion matrices, and feature importance plots (high-resolution PNGs)
 - `models/` — serialized `.pkl` model and scaler files
 
 ### Model Performance
 
-| Dataset       | Best Model          | Accuracy | AUC Score |
-| :------------ | :------------------ | :------- | :-------- |
-| Diabetes      | Logistic Regression | 77.6%    | 0.86      |
-| Heart Disease | Random Forest       | 98.1%    | 0.99      |
+| Dataset        | Best Model          | Accuracy | AUC Score |
+| :------------- | :------------------ | :------- | :-------- |
+| Diabetes       | Logistic Regression | 77.6%    | 0.86      |
+| Heart Disease  | Random Forest       | 98.1%    | 0.99      |
 
 <a name="guide"></a>
-
 ## 4. Guidance
 
 - Use [git](https://git-scm.com/book/en/v2)
