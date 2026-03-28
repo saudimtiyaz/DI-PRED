@@ -62,7 +62,6 @@ repository
 │   ├── utils.py              ## Shared utility functions
 │   └── visualize.py          ## Plotting helpers
 ├── main.py                   ## Entry point
-├── demo_walkthrough.sh       ## Automated demo script
 ├── requirements.txt          ## Pip dependencies
 ├── requirements.yml          ## Conda dependencies
 ├── CONTRIBUTORS.md           ## Team details
