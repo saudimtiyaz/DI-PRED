@@ -1,3 +1,9 @@
+# Copyright (c) DI-PRED contributors.
+# Licensed under the MIT License. See LICENSE.
+
+"""Prepare raw datasets into normalized train/validation/test splits for model training."""
+
+from typing import Literal, Tuple
 import pandas as pd
 import numpy as np
 from sklearn.model_selection import train_test_split
@@ -6,10 +12,13 @@ import joblib
 import os
 
 
-def preprocess(dataset):
+def preprocess(
+    dataset: Literal['diabetes', 'heart']
+) -> Tuple[np.ndarray, np.ndarray, np.ndarray, pd.Series, pd.Series, pd.Series]:
     """
-    Loads, cleans, normalizes and splits a dataset.
-    dataset: 'diabetes' or 'heart'
+    Load, clean, scale, and split a dataset into train/validation/test sets.
+
+    `dataset` must be either `diabetes` or `heart`.
     """
 
     # load the right csv depending on which dataset we're working with
@@ -42,6 +51,8 @@ def preprocess(dataset):
     X_train, X_temp, y_train, y_temp = train_test_split(
         X, y, test_size=0.30, random_state=42, stratify=y
     )
+    # `val_size=0.50` is applied to the remaining 30% (X_temp), not the full dataset.
+    # That means each of val and test receives half of 30%, resulting in 15% each overall.
     X_val, X_test, y_val, y_test = train_test_split(
         X_temp, y_temp, test_size=0.50, random_state=42, stratify=y_temp
     )

@@ -1,8 +1,10 @@
+"""Download and normalize raw datasets used by the DI-PRED pipeline."""
+
 import os
 import pandas as pd
 import requests
 
-def download_file(url, filename):
+def download_file(url: str, filename: str) -> bool:
     """Downloads a file from a URL if it doesn't already exist. Returns True if downloaded."""
     if os.path.exists(filename):
         print(f"  File already exists: {filename}")
@@ -19,7 +21,34 @@ def download_file(url, filename):
         print(f"  Failed to download: {url} (Status: {response.status_code})")
         return False
 
-def main():
+
+def remove_duplicate_header_rows(csv_path: str, expected_header: str) -> None:
+    """
+    Remove repeated in-file header rows caused by interrupted/manual re-runs.
+
+    This guards against malformed files where header lines reappear in the body,
+    which would otherwise be parsed as invalid samples.
+    """
+    with open(csv_path, 'r', encoding='utf-8') as f:
+        lines = f.readlines()
+
+    if not lines:
+        return
+
+    deduped_lines = [lines[0]]
+    for line in lines[1:]:
+        # Keep only data rows after the first header to prevent accidental
+        # "header as data" corruption during repeated processing attempts.
+        if line.strip() != expected_header:
+            deduped_lines.append(line)
+
+    if len(deduped_lines) != len(lines):
+        with open(csv_path, 'w', encoding='utf-8') as f:
+            f.writelines(deduped_lines)
+        print(f"  Removed duplicate headers in: {csv_path}")
+
+
+def main() -> None:
     print("\n--- Data Acquisition ---")
     os.makedirs('data/raw', exist_ok=True)
 
@@ -30,11 +59,12 @@ def main():
     heart_url = "https://archive.ics.uci.edu/ml/machine-learning-databases/heart-disease/processed.cleveland.data"
     heart_cols = ['age', 'sex', 'cp', 'trestbps', 'chol', 'fbs', 'restecg', 'thalach', 'exang', 'oldpeak', 'slope', 'ca', 'thal', 'target']
 
-    # Download and process Diabetes ONLY if it doesn't exist or is corrupted
+    # Download and process Diabetes ONLY if it doesn't exist.
     if download_file(diabetes_url, 'data/raw/diabetes.csv'):
         df_diabetes = pd.read_csv('data/raw/diabetes.csv', header=None, names=diabetes_cols)
         df_diabetes.to_csv('data/raw/diabetes.csv', index=False)
         print("  Processed Diabetes dataset.")
+    remove_duplicate_header_rows('data/raw/diabetes.csv', ','.join(diabetes_cols))
 
     # Download and process Heart Disease ONLY if it doesn't exist
     if download_file(heart_url, 'data/raw/heart.csv'):
@@ -45,6 +75,7 @@ def main():
         df_heart.dropna(inplace=True)
         df_heart.to_csv('data/raw/heart.csv', index=False)
         print("  Processed Heart dataset.")
+    remove_duplicate_header_rows('data/raw/heart.csv', ','.join(heart_cols))
 
     print("\nData download and initialization complete.")
 

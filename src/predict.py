@@ -1,3 +1,10 @@
+# Copyright (c) DI-PRED contributors.
+# Licensed under the MIT License. See LICENSE.
+
+"""Run interactive CLI predictions using persisted scalers and trained models."""
+
+from typing import Literal, Sequence
+
 import numpy as np
 import joblib
 import sys
@@ -35,7 +42,8 @@ FEATURE_INFO = {
     }
 }
 
-def predict(dataset, input_values):
+def predict(dataset: Literal['diabetes', 'heart'], input_values: Sequence[float]) -> None:
+    """Generate and print a binary prediction with confidence for a single patient record."""
     scaler = joblib.load(f'models/{dataset}_scaler.pkl')
     
     # Load the best model saved during training
@@ -62,7 +70,8 @@ def predict(dataset, input_values):
     print(f"  Confidence: {probability:.2%}")
     print("="*40)
 
-def interactive_predict(dataset):
+def interactive_predict(dataset: Literal['diabetes', 'heart']) -> None:
+    """Collect feature inputs from the CLI and run prediction for the selected dataset."""
     info = FEATURE_INFO[dataset]
     print(f"\nEnter patient data for {dataset.capitalize()} prediction:")
     print("-" * 60)

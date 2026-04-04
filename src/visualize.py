@@ -1,9 +1,22 @@
+# Copyright (c) DI-PRED contributors.
+# Licensed under the MIT License. See LICENSE.
+
+"""Plot and persist model evaluation visualizations used in reports."""
+
+from typing import Sequence
+
 import matplotlib.pyplot as plt
 import seaborn as sns
 import numpy as np
 from sklearn.metrics import confusion_matrix, roc_curve, roc_auc_score
 
-def plot_confusion_matrix(y_true, y_pred, dataset_name, model_name, save_path):
+def plot_confusion_matrix(
+    y_true: np.ndarray,
+    y_pred: np.ndarray,
+    dataset_name: str,
+    model_name: str,
+    save_path: str
+) -> None:
     """Plots and saves a confusion matrix heatmap."""
     cm = confusion_matrix(y_true, y_pred)
     plt.figure(figsize=(5, 4))
@@ -18,7 +31,7 @@ def plot_confusion_matrix(y_true, y_pred, dataset_name, model_name, save_path):
     plt.close()
     print(f"  Saved Confusion Matrix: {save_path}")
 
-def plot_roc_curves(dataset_name, models_data, save_path):
+def plot_roc_curves(dataset_name: str, models_data: Sequence[tuple], save_path: str) -> None:
     """Plots multiple ROC curves on a single chart."""
     plt.figure(figsize=(7, 5))
     for model_name, y_true, y_proba in models_data:
@@ -36,7 +49,9 @@ def plot_roc_curves(dataset_name, models_data, save_path):
     plt.close()
     print(f"  Saved ROC Curves: {save_path}")
 
-def plot_feature_importance(dataset_name, feature_names, importances, save_path):
+def plot_feature_importance(
+    dataset_name: str, feature_names: Sequence[str], importances: np.ndarray, save_path: str
+) -> None:
     """Plots and saves feature importance bar chart."""
     indices = np.argsort(importances)[::-1]
     plt.figure(figsize=(8, 5))

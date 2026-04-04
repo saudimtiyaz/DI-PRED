@@ -1,3 +1,9 @@
+# Copyright (c) DI-PRED contributors.
+# Licensed under the MIT License. See LICENSE.
+
+"""Train baseline and ensemble classifiers on processed disease datasets."""
+
+from typing import Literal, Tuple
 import numpy as np
 from sklearn.linear_model import LogisticRegression
 from sklearn.ensemble import RandomForestClassifier
@@ -5,7 +11,8 @@ import joblib
 import os
 
 
-def load_data(dataset):
+def load_data(dataset: Literal['diabetes', 'heart']) -> Tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
+    """Load preprocessed train/validation arrays for a dataset."""
     # load the processed train and val splits we saved in preprocess.py
     X_train = np.load(f'data/processed/{dataset}_X_train.npy')
     X_val = np.load(f'data/processed/{dataset}_X_val.npy')
@@ -14,7 +21,10 @@ def load_data(dataset):
     return X_train, X_val, y_train, y_val
 
 
-def train_logistic_regression(X_train, y_train, dataset):
+def train_logistic_regression(
+    X_train: np.ndarray, y_train: np.ndarray, dataset: Literal['diabetes', 'heart']
+) -> LogisticRegression:
+    """Train and persist the logistic regression baseline model."""
     print(f"\n[{dataset}] Training Logistic Regression...")
 
     # simple baseline model, max_iter bumped up so it always converges
@@ -32,7 +42,10 @@ def train_logistic_regression(X_train, y_train, dataset):
     return model
 
 
-def train_random_forest(X_train, y_train, dataset):
+def train_random_forest(
+    X_train: np.ndarray, y_train: np.ndarray, dataset: Literal['diabetes', 'heart']
+) -> RandomForestClassifier:
+    """Train and persist the random forest model."""
     print(f"\n[{dataset}] Training Random Forest...")
 
     # 100 trees with a max depth to avoid overfitting too badly
@@ -51,14 +64,22 @@ def train_random_forest(X_train, y_train, dataset):
     return model
 
 
-def evaluate_val(model, X_val, y_val, model_name, dataset):
+def evaluate_val(
+    model: LogisticRegression | RandomForestClassifier,
+    X_val: np.ndarray,
+    y_val: np.ndarray,
+    model_name: str,
+    dataset: Literal['diabetes', 'heart']
+) -> float:
+    """Return validation accuracy for a trained model."""
     # quick sanity check on val set right after training
     val_acc = model.score(X_val, y_val)
     print(f"[{dataset}] {model_name} Validation Accuracy: {val_acc:.4f}")
     return val_acc
 
 
-def train_all(dataset):
+def train_all(dataset: Literal['diabetes', 'heart']) -> None:
+    """Train both model families and save the better validation performer as the default model."""
     print(f"\n{'='*40}")
     print(f" Training models for: {dataset.upper()}")
     print(f"{'='*40}")

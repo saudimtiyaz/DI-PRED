@@ -1,3 +1,10 @@
+# Copyright (c) DI-PRED contributors.
+# Licensed under the MIT License. See LICENSE.
+
+"""Evaluate trained models on held-out test data and generate result artifacts."""
+
+from typing import Dict, List, Literal, Sequence, Tuple
+
 import numpy as np
 import pandas as pd
 import os
@@ -13,19 +20,22 @@ from src.visualize import (
 )
 
 
-def load_test_data(dataset):
+def load_test_data(dataset: Literal['diabetes', 'heart']) -> Tuple[np.ndarray, np.ndarray]:
+    """Load untouched test arrays for the requested dataset."""
     # load only the test split — this data was never touched during training
     X_test = np.load(f'data/processed/{dataset}_X_test.npy')
     y_test = np.load(f'data/processed/{dataset}_y_test.npy')
     return X_test, y_test
 
 
-def load_model(dataset, model_name):
+def load_model(dataset: Literal['diabetes', 'heart'], model_name: str):
+    """Load a persisted model artifact from disk."""
     path = f'models/{dataset}_{model_name}.pkl'
     return joblib.load(path)
 
 
-def get_metrics(model, X_test, y_test):
+def get_metrics(model, X_test: np.ndarray, y_test: np.ndarray) -> Tuple[Dict[str, float], np.ndarray, np.ndarray]:
+    """Return scalar classification metrics plus predictions/probabilities."""
     # get both hard predictions and probabilities
     # probabilities are needed for auc
     y_pred = model.predict(X_test)
@@ -40,7 +50,8 @@ def get_metrics(model, X_test, y_test):
     }, y_pred, y_proba
 
 
-def evaluate_dataset(dataset, feature_names):
+def evaluate_dataset(dataset: Literal['diabetes', 'heart'], feature_names: Sequence[str]) -> List[Dict[str, str | float]]:
+    """Evaluate all configured models for one dataset and write diagnostic figures."""
     print(f"\n{'='*40}")
     print(f" Evaluating: {dataset.upper()}")
     print(f"{'='*40}")
