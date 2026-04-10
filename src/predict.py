@@ -3,6 +3,7 @@
 
 """Run interactive CLI predictions using persisted scalers and trained models."""
 
+import pandas as pd
 from typing import Literal, Sequence
 
 import numpy as np
@@ -42,23 +43,23 @@ FEATURE_INFO = {
     }
 }
 
+
 def predict(dataset: Literal['diabetes', 'heart'], input_values: Sequence[float]) -> None:
-    """Generate and print a binary prediction with confidence for a single patient record."""
     scaler = joblib.load(f'models/{dataset}_scaler.pkl')
-    
-    # Load the best model saved during training
+
     model_path = f'models/{dataset}_best_model.pkl'
     if not os.path.exists(model_path):
-        # Fallback to specific models if best_model isn't found
         if dataset == 'diabetes':
             model_path = f'models/{dataset}_logistic_regression.pkl'
         else:
             model_path = f'models/{dataset}_random_forest.pkl'
-            
+
     model = joblib.load(model_path)
 
-    input_array = np.array(input_values).reshape(1, -1)
-    input_scaled = scaler.transform(input_array)
+    # ✅ Use named columns to match how the scaler was originally fitted
+    feature_names = list(FEATURE_INFO[dataset].keys())
+    input_df = pd.DataFrame([input_values], columns=feature_names)
+    input_scaled = scaler.transform(input_df)
 
     prediction = model.predict(input_scaled)[0]
     probability = model.predict_proba(input_scaled)[0][1]
@@ -70,6 +71,7 @@ def predict(dataset: Literal['diabetes', 'heart'], input_values: Sequence[float]
     print(f"  Confidence: {probability:.2%}")
     print("="*40)
 
+
 def interactive_predict(dataset: Literal['diabetes', 'heart']) -> None:
     """Collect feature inputs from the CLI and run prediction for the selected dataset."""
     info = FEATURE_INFO[dataset]
@@ -80,21 +82,23 @@ def interactive_predict(dataset: Literal['diabetes', 'heart']) -> None:
     for feature, data in info.items():
         fmin, fmax = data['range']
         desc = data['desc']
-        
+
         while True:
             try:
                 print(f"\n> {feature.upper()}: {desc}")
                 val = float(input(f"  Enter value ({fmin} to {fmax}): "))
-                
+
                 if fmin <= val <= fmax:
                     values.append(val)
                     break
                 else:
-                    print(f"    [!] Error: Value must be between {fmin} and {fmax}.")
+                    print(
+                        f"    [!] Error: Value must be between {fmin} and {fmax}.")
             except ValueError:
                 print("    [!] Error: Please enter a numeric value.")
 
     predict(dataset, values)
+
 
 if __name__ == '__main__':
     print("\n" + "="*40)
@@ -103,7 +107,7 @@ if __name__ == '__main__':
     print("Which dataset?")
     print("  1. Diabetes")
     print("  2. Heart Disease")
-    
+
     choice = input("\nEnter 1 or 2: ").strip()
 
     if choice == '1':
